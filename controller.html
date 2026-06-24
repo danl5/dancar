@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DanCar Controller</title>
+<style>
+:root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --primary: #0f3460;
+    --accent: #e94560;
+    --green: #00d2a0;
+    --yellow: #ffd700;
+    --text: #eee;
+    --muted: #8892a4;
+    --radius: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.container {
+    max-width: 520px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* --- Connection bar --- */
+.conn-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.conn-bar button {
+    background: var(--green);
+    border: none;
+    color: #000;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 15px;
+    white-space: nowrap;
+    transition: transform .1s, opacity .2s;
+}
+.conn-bar button:active { transform: scale(0.95); }
+.conn-bar button:disabled { opacity: 0.35; cursor: default; }
+.conn-bar button.disconnect { background: var(--accent); color: #fff; }
+.conn-status {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background .3s;
+}
+.status-dot.on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.status-text { font-size: 13px; color: var(--muted); }
+.battery { margin-left: auto; font-size: 13px; font-weight: 600; }
+
+/* --- D-Pad --- */
+.dpad-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 8px;
+    max-width: 240px;
+    margin: 0 auto;
+}
+.dpad-btn {
+    aspect-ratio: 1;
+    border: 2px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    border-radius: 14px;
+    font-size: 22px;
+    cursor: pointer;
+    transition: background .1s, border-color .1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.dpad-btn:active, .dpad-btn.pressed { background: var(--primary); border-color: var(--accent); }
+.dpad-btn.center { font-size: 14px; font-weight: 700; }
+.dpad-placeholder { visibility: hidden; }
+
+/* --- Rotation + Speed --- */
+.rot-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 8px 0;
+}
+.rot-btn {
+    padding: 8px 18px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background .1s;
+}
+.rot-btn:active { background: var(--primary); }
+.speed-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+.speed-row label { font-size: 13px; color: var(--muted); }
+.speed-row input[type=range] { flex: 1; accent-color: var(--accent); }
+.speed-row .speed-val {
+    width: 36px; text-align: center;
+    font-weight: 700; font-size: 15px;
+}
+
+/* --- Gripper --- */
+.grip-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+.grip-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background .1s;
+}
+.grip-btn:active { background: var(--primary); }
+.grip-btn.open { border-color: var(--green); color: var(--green); }
+
+/* --- Behaviors --- */
+.behavior-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.behavior-btn {
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background .1s;
+}
+.behavior-btn:active { background: var(--primary); border-color: var(--yellow); }
+.behavior-btn.active { background: var(--primary); border-color: var(--yellow); }
+
+/* --- Footer --- */
+.footer { text-align: center; font-size: 11px; color: var(--muted); }
+.footer kbd {
+    background: rgba(255,255,255,0.08);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: monospace;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Connection -->
+    <div class="card conn-bar">
+        <button id="btnConnect" onclick="connect()">Connect</button>
+        <div class="conn-status">
+            <span id="statusDot" class="status-dot"></span>
+            <span id="statusText" class="status-text">Disconnected</span>
+            <span id="batteryLabel" class="battery"></span>
+        </div>
+    </div>
+
+    <!-- D-Pad + Rotation -->
+    <div class="card">
+        <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:10px">MOVEMENT</div>
+        <div class="dpad-grid" id="dpad">
+            <div class="dpad-placeholder"></div>
+            <button class="dpad-btn" data-dir="forward"    ontouchstart="event.preventDefault()">▲</button>
+            <div class="dpad-placeholder"></div>
+            <button class="dpad-btn" data-dir="left"       ontouchstart="event.preventDefault()">◀</button>
+            <button class="dpad-btn center" data-dir="stop" ontouchstart="event.preventDefault()">STOP</button>
+            <button class="dpad-btn" data-dir="right"       ontouchstart="event.preventDefault()">▶</button>
+            <div class="dpad-placeholder"></div>
+            <button class="dpad-btn" data-dir="backward"    ontouchstart="event.preventDefault()">▼</button>
+            <div class="dpad-placeholder"></div>
+        </div>
+        <div class="rot-row">
+            <button class="rot-btn" data-dir="ccw">↺ CCW</button>
+            <button class="rot-btn" data-dir="cw">↻ CW</button>
+        </div>
+        <div class="speed-row">
+            <label>Speed</label>
+            <input type="range" id="speedSlider" min="20" max="100" value="70">
+            <span class="speed-val" id="speedVal">70</span>
+        </div>
+    </div>
+
+    <!-- Servo -->
+    <div class="card">
+        <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px">SERVO / ARM</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <span style="font-size:12px;color:var(--muted);white-space:nowrap">Joint:</span>
+            <select id="servoSelect" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:var(--primary);color:var(--text);font-size:13px">
+                <option value="0">🦾 Gripper (0)</option>
+                <option value="1">💪 Arm (1)</option>
+                <option value="2">🖐 Wrist (2)</option>
+            </select>
+        </div>
+        <div class="grip-row">
+            <button class="grip-btn open" id="gripOpen">OPEN</button>
+            <button class="grip-btn" id="gripClose">CLOSE</button>
+            <button class="grip-btn" id="gripToggle">TOGGLE</button>
+        </div>
+    </div>
+
+    <!-- Behaviors -->
+    <div class="card">
+        <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px">BEHAVIORS</div>
+        <div class="behavior-grid">
+            <button class="behavior-btn" data-behavior="dance">💃 Dance</button>
+            <button class="behavior-btn" data-behavior="patrol">🔍 Patrol</button>
+            <button class="behavior-btn" data-behavior="grabDrop">🦾 Grab & Drop</button>
+            <button class="behavior-btn" data-behavior="zigzag">⚡ Zigzag</button>
+        </div>
+    </div>
+
+    <!-- Keyboard hints -->
+    <div class="footer">
+        Keyboard: <kbd>W/S</kbd> fwd/back &nbsp;
+        <kbd>A/D</kbd> strafe &nbsp;
+        <kbd>Q/E</kbd> rotate &nbsp;
+        <kbd>Space</kbd> stop &nbsp;
+        <kbd>1-4</kbd> behavior
+    </div>
+
+</div>
+
+<script>
+const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+const CHAR_COMMAND = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
+const CHAR_STATUS  = 'beb5483e-36e1-4688-b7f5-ea07361b26a9';
+
+let device = null;
+let server = null;
+let cmdChar = null;
+let statusChar = null;
+let connected = false;
+let activeDir = null;
+
+const btnConnect = document.getElementById('btnConnect');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const batteryLabel = document.getElementById('batteryLabel');
+const speedSlider = document.getElementById('speedSlider');
+const speedVal = document.getElementById('speedVal');
+const dpad = document.getElementById('dpad');
+
+// --- Speed slider ---
+speedSlider.addEventListener('input', () => {
+    speedVal.textContent = speedSlider.value;
+});
+
+// --- D-Pad: mouse + touch ---
+function getDirEl(el) { return el.closest('[data-dir]'); }
+
+function onDirDown(el) {
+    const dir = el.getAttribute('data-dir');
+    if (!dir) return;
+    el.classList.add('pressed');
+    const speed = parseInt(speedSlider.value);
+    if (dir === 'stop') {
+        sendCmd({cmd:'stop'});
+        activeDir = null;
+    } else if (dir === 'cw' || dir === 'ccw') {
+        sendCmd({cmd:'move', dir:dir, speed:speed});
+    } else {
+        sendCmd({cmd:'move', dir:dir, speed:speed});
+    }
+    if (dir !== 'stop') activeDir = dir;
+}
+
+function onDirUp(el) {
+    const dir = el.getAttribute('data-dir');
+    if (!dir) return;
+    el.classList.remove('pressed');
+    if (dir !== 'stop' && activeDir === dir) {
+        sendCmd({cmd:'stop'});
+        activeDir = null;
+    }
+}
+
+dpad.addEventListener('pointerdown', e => {
+    const el = getDirEl(e.target);
+    if (el) { onDirDown(el); el.setPointerCapture(e.pointerId); }
+});
+
+// Rotation buttons (not in dpad)
+document.querySelector('.rot-row').addEventListener('pointerdown', e => {
+    const el = getDirEl(e.target);
+    if (el) { onDirDown(el); el.setPointerCapture(e.pointerId); }
+});
+
+dpad.addEventListener('pointerup', e => {
+    const el = getDirEl(e.target);
+    if (el) onDirUp(el);
+});
+document.querySelector('.rot-row').addEventListener('pointerup', e => {
+    const el = getDirEl(e.target);
+    if (el) onDirUp(el);
+});
+
+// --- Servo buttons (with joint selector) ---
+function getServoPos() {
+    return parseInt(document.getElementById('servoSelect').value);
+}
+document.getElementById('gripOpen').addEventListener('click',  () => sendCmd({cmd:'grip', action:'open',  pos:getServoPos()}));
+document.getElementById('gripClose').addEventListener('click', () => sendCmd({cmd:'grip', action:'close', pos:getServoPos()}));
+document.getElementById('gripToggle').addEventListener('click',() => sendCmd({cmd:'grip', action:'toggle',pos:getServoPos()}));
+
+// --- Behavior buttons ---
+document.querySelectorAll('.behavior-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const name = btn.getAttribute('data-behavior');
+        sendCmd({cmd:'behavior', name:name});
+        // Highlight active behavior
+        document.querySelectorAll('.behavior-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 800);
+    });
+});
+
+// --- Keyboard ---
+const keyMap = {
+    'w':       {dir:'forward'},
+    's':       {dir:'backward'},
+    'a':       {dir:'left'},
+    'd':       {dir:'right'},
+    'q':       {dir:'ccw'},
+    'e':       {dir:'cw'},
+    ' ':       {dir:'stop', stop:true},
+    'escape':  {dir:'stop', stop:true},
+};
+document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if (k >= '1' && k <= '4') {
+        e.preventDefault();
+        const names = ['dance','patrol','grabDrop','zigzag'];
+        sendCmd({cmd:'behavior', name:names[parseInt(k)-1]});
+        return;
+    }
+    const m = keyMap[k];
+    if (!m) return;
+    e.preventDefault();
+    const speed = parseInt(speedSlider.value);
+    if (m.stop) { sendCmd({cmd:'stop'}); return; }
+    sendCmd({cmd:'move', dir:m.dir, speed:speed});
+});
+document.addEventListener('keyup', e => {
+    const m = keyMap[e.key.toLowerCase()];
+    if (!m || m.stop) return;
+    e.preventDefault();
+    sendCmd({cmd:'stop'});
+});
+
+// --- BLE ---
+async function connect() {
+    statusText.textContent = 'Checking Web Bluetooth...';
+    if (!navigator.bluetooth) {
+        statusText.textContent = 'Web Bluetooth not available. Use Chrome/Edge.';
+        return;
+    }
+    try {
+        statusText.textContent = 'Scanning...';
+        device = await navigator.bluetooth.requestDevice({
+            filters: [{name: 'DanCar'}],
+            optionalServices: [SERVICE_UUID]
+        });
+        statusText.textContent = 'Connecting...';
+        device.addEventListener('gattserverdisconnected', onDisconnect);
+
+        server = await device.gatt.connect();
+        statusText.textContent = 'Discovering services...';
+        const service = await server.getPrimaryService(SERVICE_UUID);
+
+        cmdChar = await service.getCharacteristic(CHAR_COMMAND);
+        statusChar = await service.getCharacteristic(CHAR_STATUS);
+        await statusChar.startNotifications();
+        statusChar.addEventListener('characteristicvaluechanged', onStatusNotify);
+
+        setConnected(true);
+        statusText.textContent = 'Connected';
+    } catch (err) {
+        let msg = err.message || err.toString();
+        if (msg.includes('cancelled') || msg.includes('user')) {
+            statusText.textContent = 'Scan cancelled by user';
+        } else if (msg.includes('No Services') || msg.includes('primary service')) {
+            statusText.textContent = 'Service not found. Re-flash firmware?';
+        } else if (msg.includes('secure context') || msg.includes('SecurityError')) {
+            statusText.textContent = 'Use http://localhost (not file://)';
+        } else {
+            statusText.textContent = 'Error: ' + msg.slice(0, 40);
+        }
+        console.error(err);
+    }
+}
+
+function disconnect() {
+    if (server) { server.disconnect(); }
+}
+
+function onDisconnect() {
+    setConnected(false);
+    statusText.textContent = 'Disconnected';
+    cmdChar = null;
+    statusChar = null;
+    server = null;
+    device = null;
+}
+
+function setConnected(state) {
+    connected = state;
+    statusDot.classList.toggle('on', state);
+    if (state) {
+        batteryLabel.textContent = '';
+        btnConnect.textContent = 'Disconnect';
+        btnConnect.classList.add('disconnect');
+        btnConnect.onclick = disconnect;
+    } else {
+        batteryLabel.textContent = '';
+        btnConnect.textContent = 'Connect';
+        btnConnect.classList.remove('disconnect');
+        btnConnect.onclick = connect;
+    }
+}
+
+function onStatusNotify(event) {
+    try {
+        const val = new TextDecoder().decode(event.target.value);
+        const data = JSON.parse(val);
+        if (data.battery !== undefined) {
+            batteryLabel.textContent = '🔋' + data.battery + '%';
+        }
+    } catch (e) {}
+}
+
+function sendCmd(obj) {
+    if (!cmdChar) return;
+    try {
+        const json = JSON.stringify(obj);
+        const enc = new TextEncoder().encode(json);
+        cmdChar.writeValue(enc).catch(() => {});
+    } catch (e) {
+        console.error('sendCmd:', e);
+    }
+}
+</script>
+</body>
+</html>
