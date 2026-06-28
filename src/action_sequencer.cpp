@@ -101,6 +101,8 @@ void ActionSequencer::executeAction(const ActionCommand &cmd) {
             _inDelay = true;
             _delayStartMs = millis();
             break;
+        case ACTION_AUDIO:
+            break;
     }
 }
 

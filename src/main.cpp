@@ -1,6 +1,7 @@
 #include <M5Unified.h>
 #include <M5_RoverC.h>
 #include "config.h"
+#include "audio_controller.h"
 #include "motion_controller.h"
 #include "gripper_controller.h"
 #include "action_sequencer.h"
@@ -8,14 +9,17 @@
 #include "remote_handler.h"
 
 M5_ROVERC roverc;
+AudioController audio;
 MotionController motion(roverc);
 GripperController gripper(roverc);
 ActionSequencer sequencer(motion, gripper);
 Behaviors behaviors(sequencer);
-RemoteHandler remote(motion, gripper, sequencer, behaviors);
+RemoteHandler remote(motion, gripper, sequencer, behaviors, audio);
 
 OpMode mode = MODE_REMOTE;
 unsigned long lastDrawMs = 0;
+bool audioReady = false;
+uint8_t audioDevType = 255;
 
 // Button-mode state
 uint8_t btnDirIndex = 0;
@@ -83,13 +87,15 @@ void drawDisplay() {
     M5.Display.setCursor(0, 0);
     M5.Display.setTextSize(1);
 
-    // Row 1: mode + battery
+    // Row 1: mode + battery + audio
     const char* modeNames[] = {"REMOTE", "BUTTON", "DEMO"};
     int bat = M5.Power.getBatteryLevel();
     M5.Display.setTextColor(TFT_CYAN);
     M5.Display.printf("%-6s", modeNames[mode]);
     M5.Display.setTextColor(bat > 20 ? TFT_GREEN : TFT_RED);
-    M5.Display.printf("BAT:%d%%\n", bat);
+    M5.Display.printf("BAT:%d%%", bat);
+    M5.Display.setTextColor(audioReady ? TFT_GREEN : TFT_DARKGREY);
+    M5.Display.printf(" %s\n", audioReady ? "AUD" : "---");
 
     // Row 2: status
     M5.Display.setTextColor(TFT_WHITE);
@@ -175,6 +181,13 @@ void setup() {
 
     motion.begin();
     sequencer.begin();
+
+    // Audio init (before BLE, non-critical)
+    delay(500);
+    audioReady = audio.begin();
+    M5.Display.println(audioReady ? "Audio OK" : "Audio FAIL");
+    delay(2000);  // keep boot screen visible
+
     remote.begin();
     Serial.println("BLE advertising as DanCar");
 
@@ -191,6 +204,7 @@ void setup() {
 void loop() {
     M5.update();  // required for button state machine
 
+    audio.update();
     handleButtons();
     motion.update();
     sequencer.tick();

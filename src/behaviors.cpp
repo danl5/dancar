@@ -26,12 +26,12 @@ const ActionCommand Behaviors::PATROL[] = {
 const uint8_t Behaviors::PATROL_COUNT = sizeof(PATROL) / sizeof(ActionCommand);
 
 const ActionCommand Behaviors::GRAB_DROP[] = {
-    { ACTION_SERVO, 0, 60, 0, 500 },
+    { ACTION_SERVO, 0, 10, 0, 500 },
     { ACTION_MOVE,  40, 0, 0, 2000 },
     { ACTION_STOP,   0, 0, 0,  500 },
-    { ACTION_SERVO, 0, 10, 0, 500 },
-    { ACTION_MOVE, -40, 0, 0, 2000 },
     { ACTION_SERVO, 0, 60, 0, 500 },
+    { ACTION_MOVE, -40, 0, 0, 2000 },
+    { ACTION_SERVO, 0, 10, 0, 500 },
     { ACTION_STOP,   0, 0, 0,    0 },
 };
 const uint8_t Behaviors::GRAB_DROP_COUNT = sizeof(GRAB_DROP) / sizeof(ActionCommand);

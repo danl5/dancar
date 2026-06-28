@@ -1,4 +1,5 @@
 #include "remote_handler.h"
+#include "audio_controller.h"
 #include "motion_controller.h"
 #include "gripper_controller.h"
 #include "action_sequencer.h"
@@ -8,9 +9,11 @@
 RemoteHandler::RemoteHandler(MotionController &motion,
                              GripperController &gripper,
                              ActionSequencer &sequencer,
-                             Behaviors &behaviors)
+                             Behaviors &behaviors,
+                             AudioController &audio)
     : _motion(motion), _gripper(gripper), _sequencer(sequencer),
-      _behaviors(behaviors), _pServer(nullptr), _pCmdChar(nullptr),
+      _behaviors(behaviors), _audio(audio),
+      _pServer(nullptr), _pCmdChar(nullptr),
       _pStatusChar(nullptr), _deviceConnected(false) {}
 
 void RemoteHandler::begin() {
@@ -85,6 +88,8 @@ void RemoteHandler::parseCommand(const char *json) {
         _motion.stop();
     } else if (strcmp(cmd, "behavior") == 0) {
         handleBehavior(obj);
+    } else if (strcmp(cmd, "audio") == 0) {
+        handleAudio(obj);
     }
 
     notifyStatus();
@@ -135,7 +140,7 @@ void RemoteHandler::handleGrip(JsonObject obj) {
     } else if (strcmp(action, "close") == 0) {
         _gripper.setServoAngle(pos, GRIPPER_CLOSE_ANGLE);
     } else if (strcmp(action, "toggle") == 0) {
-        _gripper.setServoAngle(pos, _gripper.currentAngle() > 30 ? GRIPPER_CLOSE_ANGLE : GRIPPER_OPEN_ANGLE);
+        _gripper.toggle();
     } else {
         _gripper.setServoAngle(pos, angle);
     }
@@ -145,6 +150,33 @@ void RemoteHandler::handleBehavior(JsonObject obj) {
     const char *name = obj["name"];
     if (!name) return;
     _behaviors.start(name);
+}
+
+void RemoteHandler::handleAudio(JsonObject obj) {
+    const char *action = obj["action"] | "";
+    const char *name   = obj["name"]   | "";
+    uint8_t vol        = obj["vol"]    | AUDIO_DEFAULT_VOLUME;
+
+    if (strcmp(action, "play") == 0) {
+        if (name[0]) {
+            _audio.play(name);
+        } else {
+            uint8_t idx = obj["index"] | 0;
+            _audio.playByIndex(idx);
+        }
+    } else if (strcmp(action, "stop") == 0) {
+        _audio.stop();
+    } else if (strcmp(action, "pause") == 0) {
+        _audio.pause();
+    } else if (strcmp(action, "resume") == 0) {
+        _audio.resume();
+    } else if (strcmp(action, "next") == 0) {
+        _audio.next();
+    } else if (strcmp(action, "prev") == 0) {
+        _audio.prev();
+    } else if (strcmp(action, "volume") == 0) {
+        _audio.setVolume(vol);
+    }
 }
 
 // --- Server callbacks ---

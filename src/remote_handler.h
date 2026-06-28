@@ -8,10 +8,11 @@ public:
     RemoteHandler(class MotionController &motion,
                   class GripperController &gripper,
                   class ActionSequencer &sequencer,
-                  class Behaviors &behaviors);
+                  class Behaviors &behaviors,
+                  class AudioController &audio);
 
     void begin();
-    void update();  // call each loop iteration
+    void update();
 
     void notifyStatus();
 
@@ -20,6 +21,7 @@ private:
     GripperController &_gripper;
     ActionSequencer &_sequencer;
     Behaviors &_behaviors;
+    AudioController &_audio;
 
     NimBLEServer *_pServer;
     NimBLECharacteristic *_pCmdChar;
@@ -30,6 +32,7 @@ private:
     void handleMove(JsonObject obj);
     void handleGrip(JsonObject obj);
     void handleBehavior(JsonObject obj);
+    void handleAudio(JsonObject obj);
 
     static const uint16_t JSON_BUF_SIZE = 256;
 

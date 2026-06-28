@@ -13,8 +13,8 @@
 #define DEFAULT_SPEED             80
 
 // --- Servo (gripper) ---
-#define GRIPPER_CLOSE_ANGLE   10
-#define GRIPPER_OPEN_ANGLE    60
+#define GRIPPER_CLOSE_ANGLE   60
+#define GRIPPER_OPEN_ANGLE    10
 #define GRIPPER_SERVO_POS     0
 #define GRIPPER_MOVE_DUR_MS   600     // ms for gripper servo movement
 
@@ -24,6 +24,9 @@
 #define STATUS_REFRESH_MS         200
 #define DISPLAY_WIDTH             135
 #define DISPLAY_HEIGHT            240
+
+// --- Audio ---
+#define AUDIO_DEFAULT_VOLUME 15
 
 // --- Operating modes ---
 enum OpMode {
@@ -39,4 +42,5 @@ enum ActionType {
     ACTION_STOP,
     ACTION_SERVO,
     ACTION_DELAY,
+    ACTION_AUDIO,
 };

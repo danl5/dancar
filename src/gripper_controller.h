@@ -14,8 +14,8 @@ public:
 
     // State
     uint8_t currentAngle() const { return _currentAngle; }
-    bool isOpen() const   { return _currentAngle >= _openAngle - 5; }
-    bool isClosed() const { return _currentAngle <= _closeAngle + 5; }
+    bool isOpen() const   { return _currentAngle <= _openAngle + 5; }
+    bool isClosed() const { return _currentAngle >= _closeAngle - 5; }
 
 private:
     M5_ROVERC &_roverc;

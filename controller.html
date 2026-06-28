@@ -178,6 +178,36 @@ body {
 .behavior-btn:active { background: var(--primary); border-color: var(--yellow); }
 .behavior-btn.active { background: var(--primary); border-color: var(--yellow); }
 
+/* --- Audio --- */
+.audio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.audio-btn {
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background .1s;
+}
+.audio-btn:active { background: var(--primary); border-color: var(--accent); }
+.audio-ctrl-btn {
+    padding: 6px 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background .1s;
+}
+.audio-ctrl-btn:active { background: var(--primary); }
+
 /* --- Footer --- */
 .footer { text-align: center; font-size: 11px; color: var(--muted); }
 .footer kbd {
@@ -253,6 +283,33 @@ body {
             <button class="behavior-btn" data-behavior="patrol">🔍 Patrol</button>
             <button class="behavior-btn" data-behavior="grabDrop">🦾 Grab & Drop</button>
             <button class="behavior-btn" data-behavior="zigzag">⚡ Zigzag</button>
+        </div>
+    </div>
+
+    <!-- Audio -->
+    <div class="card">
+        <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px">AUDIO</div>
+        <div class="audio-grid" id="audioGrid">
+            <button class="audio-btn" data-track="yahaha">🌿 Yahaha</button>
+            <button class="audio-btn" data-track="sensor">📡 Sensor</button>
+            <button class="audio-btn" data-track="double">📡📡 Double</button>
+            <button class="audio-btn" data-track="item">✨ Item</button>
+            <button class="audio-btn" data-track="sword">⚔️ Sword</button>
+            <button class="audio-btn" data-track="guardian">🔫 Guardian</button>
+            <button class="audio-btn" data-track="rocks">🪨 Rocks</button>
+            <button class="audio-btn" data-track="contact">📞 Contact</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;justify-content:center;flex-wrap:wrap">
+            <button class="audio-ctrl-btn" id="audioStop">⏹ Stop</button>
+            <button class="audio-ctrl-btn" id="audioPause">⏸ Pause</button>
+            <button class="audio-ctrl-btn" id="audioResume">▶ Resume</button>
+            <button class="audio-ctrl-btn" id="audioPrev">⏮ Prev</button>
+            <button class="audio-ctrl-btn" id="audioNext">⏭ Next</button>
+        </div>
+        <div class="speed-row" style="margin-top:10px">
+            <label>Vol</label>
+            <input type="range" id="volSlider" min="0" max="30" value="15">
+            <span class="speed-val" id="volVal">15</span>
         </div>
     </div>
 
@@ -359,6 +416,26 @@ document.querySelectorAll('.behavior-btn').forEach(btn => {
         btn.classList.add('active');
         setTimeout(() => btn.classList.remove('active'), 800);
     });
+});
+
+// --- Audio buttons ---
+document.querySelectorAll('.audio-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const track = btn.getAttribute('data-track');
+        sendCmd({cmd:'audio', action:'play', name:track});
+    });
+});
+document.getElementById('audioStop').addEventListener('click',   () => sendCmd({cmd:'audio', action:'stop'}));
+document.getElementById('audioPause').addEventListener('click',  () => sendCmd({cmd:'audio', action:'pause'}));
+document.getElementById('audioResume').addEventListener('click', () => sendCmd({cmd:'audio', action:'resume'}));
+document.getElementById('audioPrev').addEventListener('click',   () => sendCmd({cmd:'audio', action:'prev'}));
+document.getElementById('audioNext').addEventListener('click',   () => sendCmd({cmd:'audio', action:'next'}));
+
+const volSlider = document.getElementById('volSlider');
+const volVal = document.getElementById('volVal');
+volSlider.addEventListener('input', () => {
+    volVal.textContent = volSlider.value;
+    sendCmd({cmd:'audio', action:'volume', vol:parseInt(volSlider.value)});
 });
 
 // --- Keyboard ---

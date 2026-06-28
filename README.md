@@ -15,7 +15,7 @@ platformio run
 platformio run --target upload && platformio device monitor
 ```
 
-Dependencies managed via `platformio.ini`: M5Unified, M5GFX, M5_RoverC, NimBLE-Arduino, ArduinoJson.
+Dependencies managed via `platformio.ini`: M5Unified, M5GFX, M5_RoverC, NimBLE-Arduino, ArduinoJson, M5Unit-AudioPlayer.
 
 ---
 
@@ -74,6 +74,37 @@ Examples:
 
 ```json
 {"cmd":"behavior","name":"dance"}
+```
+
+**`audio`** — control the AudioPlayer unit (N9301, Grove port).
+
+| Param | Type | Values | Default |
+|-------|------|--------|---------|
+| `action` | string | `play`, `stop`, `pause`, `resume`, `next`, `prev`, `volume` | — |
+| `name` | string | track name (see below) | — |
+| `index` | uint8 | 1–8, file number on SD card | — |
+| `vol` | uint8 | 0–30 | 15 |
+
+Track names:
+
+| Name | File |
+|------|------|
+| `yahaha` | Korok discovery sound |
+| `sensor` | Sheikah Sensor ping |
+| `double` | Double Sensor ping |
+| `item` | Item collect |
+| `sword` | Master Sword get |
+| `guardian` | Guardian laser |
+| `rocks` | Rocks drop |
+| `contact` | First contact |
+
+Examples:
+```json
+{"cmd":"audio","action":"play","name":"yahaha"}
+{"cmd":"audio","action":"play","index":1}
+{"cmd":"audio","action":"stop"}
+{"cmd":"audio","action":"next"}
+{"cmd":"audio","action":"volume","vol":20}
 ```
 
 #### Status (read / notify, `beb5483e-36e1-4688-b7f5-ea07361b26a9`)
